@@ -1,0 +1,6 @@
+pyTelegramBotAPI>=4.22.0
+SQLAlchemy
+psycopg2-binary
+python-dotenv
+alembic
+pytz 
