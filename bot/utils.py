@@ -61,10 +61,9 @@ def log_bot_start(logger, token_status=True, bot_username=None):
     """Логирование запуска бота"""
     if token_status:
         if bot_username:
-            logger.info(f"🚀 Бот запускается... @{bot_username}")
+            logger.info(f"🤖 Бот запускается @{bot_username}")
         else:
-            logger.info("🚀 Бот запускается...")
-        logger.info("📱 Telegram Bot API подключен")
+            logger.info("🤖 Бот запускается")
     else:
         logger.error("❌ Ошибка: Не удалось получить токен бота")
 
@@ -82,4 +81,4 @@ def log_error(logger, error, context=""):
 
 def log_info(logger, message):
     """Логирование информационных сообщений"""
-    logger.info(f"ℹ️ {message}") 
+    logger.info(f"{message}") 

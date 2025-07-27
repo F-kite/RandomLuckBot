@@ -13,6 +13,14 @@ config = context.config
 fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
+# Используем DATABASE_URL из переменных окружения
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    config.set_main_option('sqlalchemy.url', database_url)
+else:
+    # Fallback для случаев, когда DATABASE_URL не установлен
+    print("Warning: DATABASE_URL not found in environment variables")
+
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -34,7 +42,5 @@ def run_migrations_online():
         with context.begin_transaction():
             context.run_migrations()
 
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online() 
+# Не вызываем функции автоматически при импорте
+# Они будут вызваны Alembic при необходимости 

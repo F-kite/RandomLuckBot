@@ -90,7 +90,7 @@ PGADMIN_DEFAULT_PASSWORD=
 docker-compose up --build -d
 
 # Просмотр логов
-docker-compose logs -f bot
+docker-compose logs bot
 ```
 
 ### 4. Применение миграций базы данных
@@ -103,7 +103,9 @@ docker-compose exec bot bash
 alembic upgrade head
 
 
-docker-compose run --rm bot alembic revision --autogenerate -m "init"
+docker-compose run --rm bot alembic upgrade head
+
+
 ```
 
 ## 🌐 Доступные сервисы
