@@ -1,46 +1,46 @@
+import os
+import sys
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from bot.models import Base
-from dotenv import load_dotenv
-
-load_dotenv()
+alembic_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(alembic_dir)
+bot_dir = os.path.join(project_root, 'bot')
+sys.path.insert(0, project_root)
+sys.path.insert(0, bot_dir)
+from models import Base
+from db import DATABASE_URL
+# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 config = context.config
-fileConfig(config.config_file_name)
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
 target_metadata = Base.metadata
 
-# Используем DATABASE_URL из переменных окружения
-database_url = os.getenv('DATABASE_URL')
-if database_url:
-    config.set_main_option('sqlalchemy.url', database_url)
-else:
-    # Fallback для случаев, когда DATABASE_URL не установлен
-    print("Warning: DATABASE_URL not found in environment variables")
-
 def run_migrations_offline():
-    url = config.get_main_option("sqlalchemy.url")
+    url = DATABASE_URL
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True
+        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True, dialect_opts={"paramstyle": "named"},
     )
     with context.begin_transaction():
         context.run_migrations()
 
 def run_migrations_online():
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        {"sqlalchemy.url": DATABASE_URL},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, compare_type=True
+            connection=connection, target_metadata=target_metadata
         )
         with context.begin_transaction():
             context.run_migrations()
 
-# Не вызываем функции автоматически при импорте
-# Они будут вызваны Alembic при необходимости 
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

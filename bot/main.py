@@ -24,6 +24,7 @@ BOT_COMMANDS = {
     "/support": "🆘 Поддержка"
 }
 
+
 async def setup_bot_commands(bot: AsyncTeleBot):
     """Настройка команд бота"""
     try:

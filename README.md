@@ -165,10 +165,10 @@ RandomLuckBot/
 - Убедитесь, что бот не заблокирован
 - Проверьте логи: `docker-compose logs bot`
 
-**Ошибки базы данных:**
+**Шаги миграции:**
 
-- Проверьте подключение к PostgreSQL
-- Примените миграции: `alembic upgrade head`
+- Выполнить миграции: `docker-compose run --rm bot alembic revision --autogenerate -m "Initial migration"` *должен появиться файл.py в alembic/versions*
+- Примените миграции: `docker-compose run --rm bot alembic upgrade head`
 - Проверьте переменные окружения
 
 **Проблемы с Docker:**

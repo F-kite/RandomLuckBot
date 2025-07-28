@@ -126,7 +126,7 @@ def register_handlers(bot: AsyncTeleBot):
 
             if current_state == 'waiting_media':
                 # Обработка медиа для розыгрыша
-                user_states[chat_id]['media'] = getattr(message, 'photo', None) or getattr(message, 'video', None) or getattr(message, 'document', None)
+                user_states[chat_id]['media'] = getattr(message, 'photo', None) or getattr(message, 'video', None) or getattr(message, 'animation', None)
                 user_states[chat_id]['state'] = 'waiting_description'
                 await bot.send_message(chat_id, message_manager.get_message('giveaway', 'create', 'request_description'))
 
