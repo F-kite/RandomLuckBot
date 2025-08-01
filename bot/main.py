@@ -10,6 +10,7 @@ from handlers import register_handlers
 from db import test_database_connection
 from utils import *
 from message_utils import message_manager
+from scheduler import run_scheduler
 
 # Настройка логирования
 logger = setup_logging()
@@ -68,24 +69,46 @@ async def run_bot():
     """Запуск бота с обработкой ошибок"""
     max_retries = 5
     retry_delay = 10
-    
+
     for attempt in range(max_retries):
         try:
             # Инициализируем бота
             bot = await init_bot()
             
+            # --- НОВОЕ: Сохраняем bot в глобальную переменную для доступа из scheduler ---
+            # Это не самый лучший способ, но для простоты подойдет.
+            # Лучше передавать bot как аргумент.
+            import handlers # Импортируем handlers
+            handlers.bot = bot # Присваиваем глобальной переменной в handlers
+            # Или сделайте bot глобальной переменной в main.py
+            global global_bot
+            global_bot = bot
+            # ---
+            
             # Проверка подключения к базе данных
             if not test_database_connection(logger):
                 log_error(logger, "Не удалось подключиться к базе данных", "запуск")
-                log_info(logger, "Бот будет работать без базы данных")
+                # log_info(logger, "Бот будет работать без базы данных") # Не будем запускать без БД
+                # return # Лучше остановить запуск
+                sys.exit(1) # Завершаем работу, если БД критична
 
             # Регистрируем обработчики
             register_handlers(bot)
-            
             # Настраиваем команды бота
             await setup_bot_commands(bot)
             
             log_info(logger, f"🚀 Бот готов к работе")
+
+            # --- Запускаем планировщик в отдельной задаче ---
+            # Создаем задачу для планировщика
+            scheduler_task = asyncio.create_task(run_scheduler(bot, interval=60)) # Проверяем каждую минуту
+            log_info(logger, "⏰ Задача планировщика создана")
+            # ---
+
+            # Указываем, что хотим получать апдейты my_chat_member (отслеживание приглашений бота в каналы)
+            await bot.polling(none_stop=True, timeout=60, allowed_updates=['message', 'callback_query', 'my_chat_member'])
+            
+            # Запускаем polling бота
             await bot.polling(none_stop=True, timeout=60)
             
         except ApiException as e:
@@ -98,6 +121,14 @@ async def run_bot():
                 break
         except KeyboardInterrupt:
             log_bot_stop(logger)
+            # --- НОВОЕ: Отменяем задачу планировщика при остановке ---
+            if 'scheduler_task' in locals():
+                scheduler_task.cancel()
+                try:
+                    await scheduler_task
+                except asyncio.CancelledError:
+                    pass
+            # ---
             break
         except Exception as e:
             log_error(logger, e, f"неожиданная ошибка (попытка {attempt + 1})")

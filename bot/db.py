@@ -31,7 +31,7 @@ def test_database_connection(logger):
         log_database_connection(logger, success=False, error=f"Неожиданная ошибка: {str(e)}")
         return False
 
-def get_db():
+def get_db(logger):
     """Получение сессии базы данных"""
     db = SessionLocal()
     log_info(logger, db)
